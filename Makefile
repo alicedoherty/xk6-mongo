@@ -19,7 +19,10 @@ clean:
 ## build: Builds a custom 'k6' with the local extension.
 build:
 	go install go.k6.io/xk6/cmd/xk6@latest
-	xk6 build --with $(shell go list -m)=.
+	# xk6 build --with $(shell go list -m)=.
+	xk6 build v0.50.0 \
+    	--with github.com/GhMartingit/xk6-mongo="/Users/alice.doherty/dev/xk6-mongo" \
+    	--with github.com/szkiba/xk6-yaml@latest
 
 ## format: Applies Go formatting to code.
 format:

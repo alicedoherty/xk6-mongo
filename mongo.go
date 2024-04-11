@@ -41,7 +41,8 @@ func (*Mongo) NewClient(connURI string) interface{} {
 
 const filter_is string = "filter is "
 
-func (c *Client) Insert(database string, collection string, doc map[string]string) error {
+func (c *Client) Insert(database string, collection string, doc map[string]interface{}) error {
+	log.Printf("Insert one document")
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 	_, err := col.InsertOne(context.TODO(), doc)
@@ -65,7 +66,7 @@ func (c *Client) InsertMany(database string, collection string, docs []any) erro
 func (c *Client) Find(database string, collection string, filter interface{}) []bson.M {
 	db := c.client.Database(database)
 	col := db.Collection(collection)
-	log.Print(filter_is, filter)
+	// log.Print(filter_is, filter)
 	cur, err := col.Find(context.TODO(), filter)
 	if err != nil {
 		log.Fatal(err)
@@ -77,12 +78,12 @@ func (c *Client) Find(database string, collection string, filter interface{}) []
 	return results
 }
 
-func (c *Client) FindOne(database string, collection string, filter map[string]string) error {
+func (c *Client) FindOne(database string, collection string, filter map[string]interface{}) error {
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 	var result bson.M
 	opts := options.FindOne().SetSort(bson.D{{"_id", 1}})
-	log.Print(filter_is, filter)
+	// log.Print(filter_is, filter)
 	err := col.FindOne(context.TODO(), filter, opts).Decode(&result)
 	if err == mongo.ErrNoDocuments {
 		log.Printf("No document was found for filter %v", filter)
@@ -95,23 +96,16 @@ func (c *Client) FindOne(database string, collection string, filter map[string]s
 	return nil
 }
 
-func (c *Client) UpdateOne(database string, collection string, filter interface{}, data map[string]string) error {
-	// var result bson.M
+func (c *Client) UpdateOne(database string, collection string, filter map[string]interface{}, update interface{}) error {
 	db := c.client.Database(database)
 	col := db.Collection(collection)
-	update := bson.D{{"$set", data}}
+
 	result, err := col.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// opts := options.FindOne().SetSort(bson.D{{"_id", 1}})
-	// err = col.FindOne(context.TODO(), filter, opts).Decode(&result)
-	// if err == mongo.ErrNoDocuments {
-	// 	log.Printf("No document was found for filter %v", filter)
-	// 	return nil
-	// }
-	log.Printf("found document %v", result)
+	log.Printf("Updated %v documents", result.ModifiedCount)
 	return nil
 }
 
@@ -130,11 +124,11 @@ func (c *Client) FindAll(database string, collection string) []bson.M {
 	return results
 }
 
-func (c *Client) DeleteOne(database string, collection string, filter map[string]string) error {
+func (c *Client) DeleteOne(database string, collection string, filter map[string]interface{}) error {
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 	opts := options.Delete().SetHint(bson.D{{"_id", 1}})
-	log.Print(filter_is, filter)
+	// log.Print(filter_is, filter)
 	result, err := col.DeleteOne(context.TODO(), filter, opts)
 	if err != nil {
 		log.Fatal(err)
@@ -143,11 +137,11 @@ func (c *Client) DeleteOne(database string, collection string, filter map[string
 	return nil
 }
 
-func (c *Client) DeleteMany(database string, collection string, filter map[string]string) error {
+func (c *Client) DeleteMany(database string, collection string, filter map[string]interface{}) error {
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 	opts := options.Delete().SetHint(bson.D{{"_id", 1}})
-	log.Print(filter_is, filter)
+	// log.Print(filter_is, filter)
 	result, err := col.DeleteMany(context.TODO(), filter, opts)
 	if err != nil {
 		log.Fatal(err)
@@ -164,5 +158,29 @@ func (c *Client) DropCollection(database string, collection string) error {
 	if err != nil {
 		log.Fatal(err)
 	}
+	return nil
+}
+
+func (c *Client) CreateIndex(database string, collection string, index map[string]int) error {
+	db := c.client.Database(database)
+	col := db.Collection(collection)
+	
+	// https://www.mongodb.com/docs/drivers/go/current/fundamentals/indexes/#single-field-indexes
+	// Convert passed in index to bson.D
+	indexKey := bson.D{}
+    for k, v := range index {
+		indexKey = append(indexKey, bson.E{Key: k, Value: v})
+    }
+	// Create index model
+	indexModel := mongo.IndexModel{
+		Keys: indexKey,
+	}
+	// Create index
+	result, err := col.Indexes().CreateOne(context.TODO(), indexModel)
+	if err != nil {
+		log.Fatal(err)
+	}
+	
+	log.Printf("Created index %v", result)
 	return nil
 }
