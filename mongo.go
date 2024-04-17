@@ -42,7 +42,7 @@ func (*Mongo) NewClient(connURI string) interface{} {
 const filter_is string = "filter is "
 
 func (c *Client) Insert(database string, collection string, doc map[string]interface{}) error {
-	log.Printf("Insert one document")
+	// log.Printf("Insert one document")
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 	_, err := col.InsertOne(context.TODO(), doc)
@@ -53,7 +53,7 @@ func (c *Client) Insert(database string, collection string, doc map[string]inter
 }
 
 func (c *Client) InsertMany(database string, collection string, docs []any) error {
-	log.Printf("Insert multiple documents")
+	// log.Printf("Insert multiple documents")
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 	_, err := col.InsertMany(context.TODO(), docs)
@@ -110,7 +110,7 @@ func (c *Client) UpdateOne(database string, collection string, filter map[string
 }
 
 func (c *Client) FindAll(database string, collection string) []bson.M {
-	log.Printf("Find all documents")
+	// log.Printf("Find all documents")
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 	cur, err := col.Find(context.TODO(), bson.D{{}})
@@ -151,7 +151,7 @@ func (c *Client) DeleteMany(database string, collection string, filter map[strin
 }
 
 func (c *Client) DropCollection(database string, collection string) error {
-	log.Printf("Delete collection if present")
+	// log.Printf("Delete collection if present")
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 	err := col.Drop(context.TODO())
@@ -168,9 +168,9 @@ func (c *Client) CreateIndex(database string, collection string, index map[strin
 	// https://www.mongodb.com/docs/drivers/go/current/fundamentals/indexes/#single-field-indexes
 	// Convert passed in index to bson.D
 	indexKey := bson.D{}
-    for k, v := range index {
+	for k, v := range index {
 		indexKey = append(indexKey, bson.E{Key: k, Value: v})
-    }
+	}
 	// Create index model
 	indexModel := mongo.IndexModel{
 		Keys: indexKey,
@@ -180,7 +180,7 @@ func (c *Client) CreateIndex(database string, collection string, index map[strin
 	if err != nil {
 		log.Fatal(err)
 	}
-	
+
 	log.Printf("Created index %v", result)
 	return nil
 }
