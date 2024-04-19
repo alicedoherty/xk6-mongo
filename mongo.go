@@ -29,7 +29,6 @@ type Client struct {
 // returns a new Mongo client object.
 // connURI -> mongodb://username:password@address:port/db?connect=direct
 func (*Mongo) NewClient(connURI string) interface{} {
-
 	clientOptions := options.Client().ApplyURI(connURI)
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 	if err != nil {
@@ -39,7 +38,7 @@ func (*Mongo) NewClient(connURI string) interface{} {
 	return &Client{client: client}
 }
 
-const filter_is string = "filter is "
+// const filter_is string = "filter is "
 
 func (c *Client) Insert(database string, collection string, doc map[string]interface{}) error {
 	// log.Printf("Insert one document")
@@ -63,11 +62,12 @@ func (c *Client) InsertMany(database string, collection string, docs []any) erro
 	return nil
 }
 
-func (c *Client) Find(database string, collection string, filter interface{}) []bson.M {
+func (c *Client) Find(database string, collection string, filter interface{}) error {// []bson.M {
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 	// log.Print(filter_is, filter)
 	cur, err := col.Find(context.TODO(), filter)
+	// _, err := col.Find(context.TODO(), filter)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -75,24 +75,26 @@ func (c *Client) Find(database string, collection string, filter interface{}) []
 	if err = cur.All(context.TODO(), &results); err != nil {
 		panic(err)
 	}
-	return results
+	// return results
+	return nil
 }
 
 func (c *Client) FindOne(database string, collection string, filter map[string]interface{}) error {
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 	var result bson.M
-	opts := options.FindOne().SetSort(bson.D{{"_id", 1}})
+	// opts := options.FindOne().SetSort(bson.D{{"_id", 1}})
 	// log.Print(filter_is, filter)
-	err := col.FindOne(context.TODO(), filter, opts).Decode(&result)
+	// err := col.FindOne(context.TODO(), filter, opts).Decode(&result)
+	err := col.FindOne(context.TODO(), filter).Decode(&result)
 	if err == mongo.ErrNoDocuments {
-		log.Printf("No document was found for filter %v", filter)
+		// log.Printf("No document found")
 		return nil
 	}
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("found document %v", result)
+	// log.Printf("found document %v", result)
 	return nil
 }
 
@@ -100,53 +102,57 @@ func (c *Client) UpdateOne(database string, collection string, filter map[string
 	db := c.client.Database(database)
 	col := db.Collection(collection)
 
-	result, err := col.UpdateOne(context.TODO(), filter, update)
+	_, err := col.UpdateOne(context.TODO(), filter, update)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("Updated %v documents", result.ModifiedCount)
+	// log.Printf("Updated %v documents", result.ModifiedCount)
 	return nil
 }
 
-func (c *Client) FindAll(database string, collection string) []bson.M {
+func (c *Client) FindAll(database string, collection string) error {// []bson.M {
 	// log.Printf("Find all documents")
 	db := c.client.Database(database)
 	col := db.Collection(collection)
-	cur, err := col.Find(context.TODO(), bson.D{{}})
+	// cur, err := col.Find(context.TODO(), bson.D{{}})
+	_, err := col.Find(context.TODO(), bson.D{{}})
 	if err != nil {
 		log.Fatal(err)
 	}
-	var results []bson.M
-	if err = cur.All(context.TODO(), &results); err != nil {
-		panic(err)
-	}
-	return results
+	// var results []bson.M
+	// if err = cur.All(context.TODO(), &results); err != nil {
+	// 	panic(err)
+	// }
+	// return results
+	return nil
 }
 
 func (c *Client) DeleteOne(database string, collection string, filter map[string]interface{}) error {
 	db := c.client.Database(database)
 	col := db.Collection(collection)
-	opts := options.Delete().SetHint(bson.D{{"_id", 1}})
+	// opts := options.Delete().SetHint(bson.D{{"_id", 1}})
 	// log.Print(filter_is, filter)
-	result, err := col.DeleteOne(context.TODO(), filter, opts)
+	// result, err := col.DeleteOne(context.TODO(), filter, opts)
+	_, err := col.DeleteOne(context.TODO(), filter)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Deleted documents %v", result)
+	// log.Printf("Deleted documents %v", result)
 	return nil
 }
 
 func (c *Client) DeleteMany(database string, collection string, filter map[string]interface{}) error {
 	db := c.client.Database(database)
 	col := db.Collection(collection)
-	opts := options.Delete().SetHint(bson.D{{"_id", 1}})
+	// opts := options.Delete().SetHint(bson.D{{"_id", 1}})
 	// log.Print(filter_is, filter)
-	result, err := col.DeleteMany(context.TODO(), filter, opts)
+	// result, err := col.DeleteMany(context.TODO(), filter, opts)
+	_, err := col.DeleteMany(context.TODO(), filter)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Printf("Deleted documents %v", result)
+	// log.Printf("Deleted documents %v", result)
 	return nil
 }
 
@@ -176,11 +182,11 @@ func (c *Client) CreateIndex(database string, collection string, index map[strin
 		Keys: indexKey,
 	}
 	// Create index
-	result, err := col.Indexes().CreateOne(context.TODO(), indexModel)
+	_, err := col.Indexes().CreateOne(context.TODO(), indexModel)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	log.Printf("Created index %v", result)
+	// log.Printf("Created index %v", result)
 	return nil
 }
